@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title id="app-title"></title>
+        <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+
+        <style>
+            :root {
+                --action-btn-svg-size: 24px;
+                --action-btn-svg-size-landscape: 24px;
+            }
+            html {
+                font-size: 20px;
+            }
+
+            body {
+                /* font-family: 'Inter', sans-serif; */
+                font-family: sans-serif;
+                background-color: #121212;
+                color: #e0e0e0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                font-size: 20px;
+            }
+
+            .container {
+                width: 100%;
+                /* max-width: 500px; */
+                padding: 1rem;
+                padding-inline: 0.25rem;
+                box-sizing: border-box;
+            }
+
+            header {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 0.15rem;
+                flex-wrap: wrap;
+                column-gap: 1rem;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #0d9488;
+            }
+
+            .header-buttons {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .action-button {
+                background-color: #2c2c2c;
+                color: #e0e0e0;
+                padding: 0.5rem;
+                border-radius: 9999px;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                transition: background-color 0.3s ease-in-out;
+                border: none;
+                cursor: pointer;
+            }
+
+            .action-button:hover {
+                background-color: #3f3f3f;
+            }
+
+            .add-button {
+                background-color: #0c877c; /* #0d9488; */
+                color: white;
+            }
+
+            .add-button:hover {
+                background-color: #0f766e;
+            }
+            #count-text-container {
+                display: flex;
+                flex-direction: row;
+                align-content: center;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 0.5rem;
+                column-gap: 1rem;
+                padding-inline: 0.85rem;
+            }
+            #count-text {
+                display: inline-block;
+                color: #a0a0a0;
+                font-weight: 700;
+                /* text-align: center; */
+                font-size: 0.8em;
+            }
+
+            .search-container {
+                position: relative;
+                margin-bottom: 1.5rem;
+                text-align: center;
+            }
+
+            .search-input {
+                width: 80%;
+                padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+                background-color: #2c2c2c;
+                border: 1px solid #333;
+                border-radius: 0.5rem;
+                color: #e0e0e0;
+                font-size: 0.875rem;
+                box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+                transition: border-color 0.3s ease-in-out;
+            }
+
+            .search-input:focus {
+                outline: none;
+                border-color: #0d9488;
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                fill: #a0a0a0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .search-icon svg {
+                fill: #929292;
+            }
+
+            .card-container {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .card {
+                background-color: #1e1e1e;
+                border-radius: 0.75rem;
+                padding: 1rem;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                border: 1px solid #333;
+            }
+            .card img {border-radius: 0.5rem;}
+            .card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 0.5rem;
+                position: relative;
+            }
+
+            .card-title {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .card-title h3 {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #de3d61;
+                margin-top: 0.25em;
+                /* margin-block: 0.25em; */
+                margin-bottom: 0.5em;
+                margin-right: 4rem;
+            }
+
+            .card-buttons {
+                display: flex;
+                gap: 0.5rem;
+                position: absolute;
+                flex-direction: column;
+                top: 0;
+                right: 0;
+            }
+
+            .card-detail {
+                font-size: 0.875rem;
+                color: #c0c0c0;
+                margin-bottom: 0.25rem;
+                margin-top: 0.5rem;
+                /* margin-right: 4rem; */
+                margin-right: 1rem;
+            }
+            .card-long-text {
+                margin-right: unset;
+            }
+            .card-detail strong,
+            summary {
+                font-weight: 500;
+                color: #a0a0a0;
+                cursor: pointer;
+            }
+            details p {
+                font-size: 0.75rem;
+                line-height: 1rem;
+                color: #b488c6;
+            }
+            .card-values {
+                font-family: sans-serif;
+                /*font-weight: 700;*/
+                color: #b488c6;
+                /* font-size: 0.85em; */
+                /* color: #8344e5;
+            font-size: 0.75rem;
+            font-family: monospace; */
+            }
+            
+            .action-button svg {
+                height: var(--action-btn-svg-size);
+                width: var(--action-btn-svg-size);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                align-content: center;
+                fill: #a0a0a0;
+            }
+            .del-btn-svg {
+                fill: #de3d61;
+            }
+
+            .highlight-green {
+                color: #2dd4bf;
+                font-weight: 600;
+            }
+
+            .highlight-red {
+                color: #f87171;
+                font-weight: 600;
+            }
+
+            .no-data-message {
+                text-align: center;
+                color: #a0a0a0;
+                margin-top: 2.5rem;
+                display: none;
+            }
+
+            .modal-overlay {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.75);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+                overflow-y: scroll;
+            }
+
+            .modal-content {
+                background-color: #1e1e1e;
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                /* margin: 1rem; */
+                width: 100%;
+                /* max-width: 400px; */
+                box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+                display: block;
+                flex-direction: column;
+                position: fixed;
+                align-content: center;
+                top: 0px;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+            }
+
+            .modal-content h2 {
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                text-align: center;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .form-group label {
+                display: block;
+                font-size: 0.875rem;
+                font-weight: 500;
+                color: #a0a0a0;
+                margin-bottom: 0.25rem;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                width: 80%;
+                padding: 0.5rem 0.75rem;
+                background-color: #2c2c2c;
+                border: 1px solid #333;
+                border-radius: 0.375rem;
+                box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+                font-size: 0.875rem;
+                /*  color: #e0e0e0; */
+                color: bisque;
+                text-align: center;
+            }
+            .form-group input[type="file"] {
+                font-size: 0.7rem;
+            }
+
+            .form-group input:focus,
+            .form-group select:focus,
+            .form-group textarea:focus {
+                outline: none;
+                border-color: #2dd4bf;
+                box-shadow: 0 0 0 1px #2dd4bf;
+            }
+
+            .modal-buttons {
+                display: flex;
+                /* justify-content: flex-end; */
+                justify-content: space-evenly;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+
+            .modal-buttons button {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+                font-weight: 500;
+                border-radius: 0.375rem;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s ease-in-out;
+            }
+
+            .btn-cancel {
+                background-color: #333;
+                color: #a0a0a0;
+            }
+
+            .btn-cancel:hover {
+                background-color: #444;
+            }
+
+            .btn-save {
+                background-color: #0d9488;
+                color: white;
+            }
+
+            .btn-save:hover {
+                background-color: #0f766e;
+            }
+
+            .btn-delete {
+                background-color: #dc2626;
+                color: white;
+            }
+
+            .btn-delete:hover {
+                background-color: #b91c1c;
+            }
+
+            @media (min-width: 640px) {
+                .container {
+                    padding: 1.5rem;
+                }
+            }
+            @media (orientation: landscape) {
+                html {
+                    font-size: 12px !important;
+                }
+                body {
+                    margin: 0;
+                }
+                h1 {
+                    font-size: 2rem;
+                }
+                header {
+                    /* justify-content: space-evenly; */
+                    flex-wrap: wrap;
+                    margin-top: 1rem;
+                }
+                .search-input {
+                    font-size: 1.5rem;
+                }
+                .search-icon {
+                    left: 5%;
+                }
+
+                .card-title h3 {
+                    font-size: 1.75rem;
+                }
+                .card-detail {
+                    font-size: 1.5rem;
+                }
+                .card {
+                    width: 30vw;
+                    margin: 0;
+                }
+                .card-container {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                    align-content: center;
+                    justify-content: flex-start;
+                }
+                summary {font-size: 1.5rem;}
+                details > p {
+                    font-size: 1.35rem;
+                    line-height: 1.75rem;
+                }
+                .container {
+                    width: 100%;
+                    max-width: unset;
+                    padding: 1rem;
+                    padding-inline: 0.25rem;
+                }
+                .action-button svg {
+                    height: var(--action-btn-svg-size-landscape);
+                    width: var(--action-btn-svg-size-landscape);
+                }
+                .modal-content h2 {
+                    font-size: 1.5rem;
+                }
+                .form-group label {
+                    font-size: 1.25rem;
+                }
+                .form-group input,
+                .form-group select,
+                .form-group textarea {
+                    width: 50%;
+                    font-size: 1.5rem;
+                }
+                .form-group input[type="file"] {
+                    font-size: 1rem;
+                }
+                .modal-buttons button {
+                    font-size: 1.25rem;
+                    padding-inline: 2rem;
+                }
+            }
+            .master-div {
+                margin: 0;
+                padding: 0;
+            }
+            input[type="file"] {
+                transition: all 0.3s ease;
+            }
+            input[type="file"]::file-selector-button:hover {
+                transform-origin: center left;
+                transform: scale(1.1);
+                transition: all 0.3s ease;
+            }
+            
+            .copied {
+                /* background: #228c52; */
+                background-color: #ffa7a7;
+            }
+            #notification-container {
+                display: none;
+                opacity: 0;
+                background-color: #d9d9d985;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 999;
+                transition: opacity 0.3s ease;
+            }
+            .notification-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: #3b3b3b;
+                color: red;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                font-family: monospace;
+                z-index: 99999;
+                text-align: center;
+                /* cursor: none; */
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="master-div">
+                <!-- Main Content Container -->
+                <div id="notification-container">
+                    <div id="notification-popup" class="notification-popup">Notified!!</div>
+                </div>
+                
+                <div class="container">
+                    <!-- Header with Add & Export Buttons -->
+                    <header>
+                        <h1 id="main-title"></h1>
+                        <div class="header-buttons">
+                            <button id="addBtn" class="action-button add-button">
+                                <span id="addSvg"></span>
+                            </button>
+                        </div>
+                    </header>
+                    <br />
+                    <div id="count-text-container">
+                        <div id="count-text"></div>
+                        <br />
+                        <button id="exportBtn" class="action-button">
+                            <span id="exportSvg"></span>
+                        </button>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <input type="text" id="searchBar" class="search-input" placeholder="Search (Multi-Value Search with Comma)..." />
+                        <span class="search-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                                <path
+                                    d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"
+                                />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <!-- Wishlist Items Container -->
+                    <div id="wishlistContainer" class="card-container">
+                        <!-- Cards will be dynamically inserted here -->
+                    </div>
+
+                    <!-- No data message -->
+                    <p id="noDataMessage" class="no-data-message">Your List is empty. Add a new entry to get started!</p>
+                </div>
+                <!-- Modals Container -->
+                <div id="modals" class="modal-overlay">
+                    <!-- Add/Edit Modal -->
+                    <div id="addEditModal" class="modal-content">
+                        <h2 id="modalTitle">Add New Entry</h2>
+                        <form id="wishlistForm">
+                            <input type="hidden" id="docId" />
+                            <!-- Elements will be dynamically inserted here -->
+                        </form>
+                    </div>
+
+                    <!-- Delete Confirmation Modal -->
+                    <div id="deleteModal" class="modal-content" style="display: none">
+                        <h2>Confirm Deletion</h2>
+                        <p style="text-align: center; color: #a0a0a0; margin-bottom: 1rem">Are you sure you want to delete this entry?</p>
+                        <div class="modal-buttons">
+                            <button id="cancelDeleteBtn" class="btn-cancel">Cancel</button>
+                            <button id="confirmDeleteBtn" class="btn-delete">Delete</button>
+                        </div>
+                    </div>
+
+                    <!-- Message/Info Modal -->
+                    <div id="infoModal" class="modal-content" style="display: none">
+                        <p id="infoMessage" style="text-align: center; color: #e0e0e0; margin-bottom: 1rem"></p>
+                        <div style="display: flex; justify-content: center">
+                            <button id="closeInfoBtn" class="btn-save">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+        </div>
+    
+        <script>
+            const collectionName = "My_Foodie_Wishlist";
+            const appTitle = "My Foodie Wishlist";
+
+            const dataMap = {
+                title: {type: "input", text: "Name", filter: true, clickToCopy: true},
+                Link: {type: "link", text: "Google Maps Link", filter: true},
+                Location: {type: "input", text: "Location", filter: true, styling: "strong", clickToCopy: true},
+                Type: {type: "datalist", text: "Type", filter: true, styling: "strong", defaultOptions: "Cafe, Restaurant, Bar, Pub, Street Food, Fast Food, Fine Dining, Disco, Food Joint, Bakery, Food Stall, Local Bar", clickToCopy: true},
+                GoogleRatings: {type: "input", text: "Google Rating", filter: true, styling: "strong", isNumeric:true, clickToCopy: true},
+                Rating: {type: "datalist", text: "Rating", filter: true, styling: "strong", defaultOptions: "Not Rated,A*, A+, A, B+, B, C+, C", clickToCopy: true},
+                Cuisine: {type: "datalist", text: "Cuisine", filter: true, defaultOptions: "Indian, Italian, Chinese, Mexican, Thai, Japanese, Continental, French, Mughlai, Irani, Western Snacks, Indian Bar Food", clickToCopy: true},
+                Drinks: {type: "select", text: "Drinks", filter: true, defaultOptions: "No, Yes, Maybe"},
+                price: {type: "datalist", text: "$", filter: true, styling: "strong", defaultOptions: "Lowest, Low, Moderate, High, Very High", clickToCopy: true},
+                BeenTo: {type: "select", text: "Visited", filter: true, defaultOptions: "No, Yes", clickToCopy: true},
+                Note: {type: "input", text: "Note", filter: true, clickToCopy: true}
+            };
+            
+            const sortBy = "timestamp";
+            const sortOrder = "desc";
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+            console.log("Collection Name: " + collectionName);
+            const prefixCountText = "No. of Entries:";
+
+            // Global variables for Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyBGM_ws-4leOmvLLzIEU62y36cHLjYeezQ",
+                authDomain: "my-bookmarks-01.firebaseapp.com",
+                projectId: "my-bookmarks-01",
+                storageBucket: "my-bookmarks-01.firebasestorage.app",
+                messagingSenderId: "202931759065",
+                appId: "1:202931759065:web:ccfa3cf456370d839a5bc8",
+            };
+
+            // SVG variables
+            const exportBtnSvg =
+                '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"></path></svg>';
+            const addBtnSvg = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"></path></svg>';
+            const editBtnSvg =
+                '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="24" height="24" style="color:#a0a0a0;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14.25v2.25c0 1.05-.84 1.89-1.89 1.89H5.732A2.25 2.25 0 0 1 3.487 16.2L3 13.5M9.375 14.625l4.5-4.5" /></svg>';
+            const deleteBtnSvg =
+                '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="24" height="24" style="color:#a0a0a0;"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.93a2.25 2.25 0 0 1-2.244-2.077L4.74 5.61a1.5 1.5 0 0 1-.342-.052M4.74 5.61a1.5 1.5 0 0 1 .342-.052M3.75 4.5h16.5a1.5 1.5 0 0 1 0 3H3.75a1.5 1.5 0 0 1 0-3Z" /></svg>';
+            const mapLinkSvg = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m256-240-56-56 384-384H240v-80h480v480h-80v-344L256-240Z"></path></svg>`;
+
+            // Initialize Firebase services
+            let app;
+            let db;
+            let allDocs = []; // Array to hold all documents from Firestore
+
+            const wishlistContainer = document.getElementById("wishlistContainer");
+            const addBtn = document.getElementById("addBtn");
+            const exportBtn = document.getElementById("exportBtn");
+            const exportSvgSpan = document.getElementById("exportSvg");
+            const addSvgSpan = document.getElementById("addSvg");
+            const searchBar = document.getElementById("searchBar");
+            const addEditModal = document.getElementById("addEditModal");
+            const deleteModal = document.getElementById("deleteModal");
+            const infoModal = document.getElementById("infoModal");
+            const modalsContainer = document.getElementById("modals");
+            const modalTitle = document.getElementById("modalTitle");
+            const wishlistForm = document.getElementById("wishlistForm");
+            const docIdInput = document.getElementById("docId");
+            const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+            const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+            const closeInfoBtn = document.getElementById("closeInfoBtn");
+            const noDataMessage = document.getElementById("noDataMessage");
+            const searchInput = document.getElementById("searchBar");
+            let visibleEntriesCount = 0; // To Track total no. of entries in the database
+            const countText = document.getElementById("count-text");
+            const notificationContainer = document.getElementById("notification-container");
+            const notificationPopup = document.getElementById("notification-popup");
+            let editingPhotoOGBase64 = {};
+
+            //----Helper Functions---Generalised Code--------------//////////////
+            // Helper function to show a modal
+            function showModal(modalElement) {
+                modalsContainer.style.display = "flex";
+                modalElement.style.display = "block";
+            }
+
+            // Helper function to hide a modal
+            function hideModal(modalElement) {
+                modalElement.style.display = "none";
+                modalsContainer.style.display = "none";
+            }
+
+            // Helper function to show an info message modal
+            function showInfoModal(message) {
+                document.getElementById("infoMessage").textContent = message;
+                showModal(infoModal);
+            }
+
+            // Helper function to capitalize the first letter of each word
+            function capitalizeEachWord(str) {
+                if (!str) return "";
+                return str
+                    .toLowerCase()
+                    .split(" ")
+                    .map((word) => {
+                        if (word.length === 0) return "";
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                    })
+                    .join(" ");
+            }
+
+            function updateCountText() {
+                countText.textContent = `${prefixCountText} ${visibleEntriesCount}`;
+            }
+
+            // Major Modification on v_2.5
+            function parseKeywords(query) {
+                // Split on commas separating units, preserving spaces in units
+                const parts = query.split(/,/g);
+                const result = [];
+
+                parts.forEach(part => {
+                    // Preserve spaces within the part (do NOT trim inside)
+                    const trimmedEnd = part.replace(/\s+$/, ''); // trim only trailing spaces for logic
+                    const endsWithSpace = part.length > trimmedEnd.length;
+                    const trimmedPart = part.trimStart(); // trim only start to preserve trailing spaces for match criteria
+
+                    if (trimmedPart.length > 0) {
+                        result.push({
+                            word: trimmedPart,
+                            endsWithSpace: endsWithSpace, // true if unit ends with space (before comma)
+                            /* hasComma: true // always true except last, handled below */
+                        });
+                    }
+                });
+
+                return result;
+            }
+
+            // Utility to escape special regex characters in search words (to avoid regex syntax errors)
+            // Added in v_2.5
+            function escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            async function exportData() {
+                try {
+                    const querySnapshot = await db.collection(collectionName).get();
+                    if (querySnapshot.empty) {
+                        showInfoModal("No data to export.");
+                        return;
+                    }
+                    const data = {};
+                    querySnapshot.docs
+                        .filter((doc) => doc.id !== "menuOptions")
+                        .forEach((doc) => {
+                            data[doc.id] = doc.data();
+                        });
+
+                    const jsonString = JSON.stringify(data, null, 2);
+                    const blob = new Blob([jsonString], {type: "application/json"});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "foodie_wishlist.json";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error("Error exporting data: ", error);
+                    showInfoModal("Error exporting data. Please try again.");
+                }
+            }
+
+            // Function to get KEY from the value in an object
+            function getKeyByValue(object, value) {
+                return Object.keys(object).find((key) => object[key] === value);
+            }
+
+            function addEvtListenerToAddNewOptions() {
+                //console.log(addEditModal); // For Debugging
+                const inputElements = addEditModal.querySelectorAll(".datalist-type");
+                //console.log(inputElements); // For Debugging
+
+                inputElements.forEach(function (inputElement) {
+                    inputElement.addEventListener("keydown", async (e) => {
+                        // e.keyCode 13 is also equivalent to Enter key.
+                        if ((e.key === "Enter" || e.keyCode === 13) && inputElement.value.trim()) {
+                            e.preventDefault();
+                            const value = inputElement.value.trim();
+                            var newValue = value
+                                .toLowerCase()
+                                .split(" ")
+                                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(" ");
+                            const datalist = inputElement.nextElementSibling;
+                            // console.log(datalist.id); //For Debugging
+                            const allOptions = Array.from(datalist.options).map((opt) => opt.value);
+                            if (!allOptions.includes(newValue)) {
+                                const newOption = document.createElement("option");
+                                newOption.value = newValue;
+                                datalist.appendChild(newOption);
+
+                                // Code Block to update the option in Firestore DB
+                                const docRef = db.collection(collectionName).doc("menuOptions");
+                                const docSnap = await docRef.get();
+                                const data = docSnap.data();
+                                // To Remove the Suffix "List" from keys
+                                const key = datalist.id.replace(/List/g, "");
+                                // console.log("key: " + key); // For Debugging
+                                // console.log("datalist.id: " + datalist.id);  // For Debugging
+                                data[key] = data[key] ? data[key] + ", " + newValue : newValue;
+                                // console.log(data[key]); // For Debugging
+
+                                /* db.collection(collectionName).doc('menuOptions').set({ [key] : data[key] }, { merge: true }); */ //Another way to add the data to firestore
+
+                                // Replace value of a single key
+                                docRef
+                                    .update({[key]: data[key]})
+                                    .then(() => {
+                                        // console.log('Update successful');  // For Debugging
+                                        alert(`Added new option: ${newValue}`);
+                                    })
+                                    .catch((error) => {
+                                        console.error("Error updating document:", error);
+                                    });
+                            } else {
+                                alert(`Value already exists!`);
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Function to resize the photo to heightLimit variable & Convert to Base64
+            function fileToBase64(file, heightLimit) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const targetHeight = heightLimit;
+                            const aspectRatio = img.width / img.height;
+                            canvas.height = targetHeight;
+                            canvas.width = targetHeight * aspectRatio;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            // You can adjust the JPEG quality here (0.1 to 1)
+                            const resizedBase64 = canvas.toDataURL('image/jpeg', 1);
+                            resolve(resizedBase64);
+                        };
+                        img.onerror = reject;
+                        img.src = reader.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Copy to clipboard helper with feedback
+            function addCopyClick(element) {
+                if (element !== null) {
+
+                    element.style.cursor = "pointer";
+                    element.title = "Click to copy";
+                    const notificationText = "Copied To Clipboard!"
+                    element.onclick = () => {
+                        navigator.clipboard
+                            .writeText(element.textContent)
+                            .then(() => {
+                                activatePopupNotification(notificationText,element,500);
+                                
+                            });
+                    };
+                }
+            }
+
+            function activatePopupNotification (notificationText = "Notified!!!", extraElement = null,timeOut = 500){
+                notificationPopup.textContent = notificationText;
+                notificationContainer.style.display = "block";
+                notificationContainer.style.opacity = "100%";
+                if (extraElement != null) {
+                    extraElement.classList.add("copied");
+                }
+                setTimeout(
+                    () => {
+                        notificationContainer.style.opacity = "0";
+                        notificationContainer.style.display = "none";
+                        if (extraElement != null) {
+                            extraElement.classList.remove("copied");
+                        }
+                    },
+                    timeOut
+                );
+                
+
+            }
+
+            /////////////////////////////////////////////////////////////////////
+
+            window.onload = function () {
+                try {
+                    exportSvgSpan.innerHTML = exportBtnSvg;
+                    addSvgSpan.innerHTML = addBtnSvg;
+                    document.getElementById("app-title").innerText = appTitle;
+                    document.getElementById("main-title").innerText = appTitle;
+
+                    // Initialize Firebase
+                    app = firebase.initializeApp(firebaseConfig);
+                    db = firebase.firestore();
+
+                    // Populate Add/Edit Modal Form Elements as per dataMap on Web App Load
+                    generateModalFormOnLoad();
+                    // Populate menu options from Firestore data (or from dataMap if firestore data is absent)
+                    populateMenuOptions();
+                    // Adds Event Listerners to Datalist Inputs in Add/Edit Modal Form
+                    addEvtListenerToAddNewOptions();
+                    const query = db.collection(collectionName).orderBy(sortBy, sortOrder);
+                    query.onSnapshot(
+                        (snapshot) => {
+                            allDocs = snapshot.docs.filter((doc) => doc.id !== "menuOptions");
+                            const searchTerm = searchInput.value;
+                            renderDocs(searchTerm);
+
+                            if (allDocs.length === 0) {
+                                noDataMessage.style.display = "block";
+                                noDataMessage.textContent = "Your wishlist is empty. Add a new entry to get started!";
+                            }
+                        },
+                        (error) => {
+                            console.error("Error fetching documents: ", error);
+                            showInfoModal("Could not load data. Please check your network and Firebase configuration.");
+                        }
+                    );
+                } catch (error) {
+                    console.error("Firebase initialization failed:", error);
+                    showInfoModal("Firebase initialization failed. Please check your firebaseConfig details.");
+                }
+            };
+
+            // Add/Edit button click listener
+            addBtn.addEventListener("click", () => {
+                modalTitle.textContent = "Add New Entry";
+                wishlistForm.reset();
+                docIdInput.value = "";
+                showModal(addEditModal);
+            });
+            // Export button click listener
+            exportBtn.addEventListener("click", exportData);
+
+            // Close Info modal
+            closeInfoBtn.addEventListener("click", () => hideModal(infoModal));
+            // Handle delete confirmation
+            confirmDeleteBtn.addEventListener("click", async () => {
+                const docId = confirmDeleteBtn.dataset.id;
+                try {
+                    await db.collection(collectionName).doc(docId).delete();
+                    // showInfoModal("Entry deleted successfully!");
+                    hideModal(deleteModal);
+                    const notificationMessage = "Entry Deleted successfully!";
+                    activatePopupNotification(notificationMessage, undefined, 500);
+                    //visibleEntriesCount--;
+                    updateCountText();
+                } catch (error) {
+                    console.error("Error deleting document: ", error);
+                    showInfoModal("Error deleting entry. Please try again.");
+                    hideModal(deleteModal);
+                }
+            });
+
+            // Cancel delete
+            cancelDeleteBtn.addEventListener("click", () => hideModal(deleteModal));
+
+            // Search bar input Ebent Listener
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value;
+                renderDocs(searchTerm);
+            });
+
+            /* function populateAddEditPanel(docId = "docId") {
+                let formInnerHtml = `<input type="hidden" id="${docId}">\n`;
+                Object.keys(dataMap).forEach((key) => {
+                    const config = dataMap[key];
+                    if (config.type === "input") {
+                        formInnerHtml += `
+                        <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="text" id="${key}">
+                        </div>\n`;
+                    }
+                    if (config.type === "link") {
+                        formInnerHtml += `
+                        <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="url" id="${key}">
+                        </div>\n`;
+                    }
+                    if (config.type === "datalist" || config.type === "select") {
+                        let options = config.defaultOptions.split(",").map((s) => s.trim());
+                        //console.log(options);
+                        let optionsHtml = "";
+                        options.forEach((option) => {
+                            //console.log(option);
+                            optionsHtml += `
+                            <option value="${option}">${option}</option>\n`;
+                        });
+                        formInnerHtml += `
+                        <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="text" id="${key}" list="${key}List" class="datalist-type" enterkeyhint="done">
+                            <datalist id="${key}List">
+                                ${optionsHtml}
+                            </datalist>
+                        </div>`;
+                        //console.log(optionsHtml);
+                    }
+                    if (config.type === "photo"){
+                        formInnerHtml += `
+                        <div class="form-group">
+                            <label for="${key}">${config.text}</label><br/>
+                            <input
+                                type="file"
+                                id="${key}"
+                                accept="image/png,image/jpeg,image/webp"/><br/>
+                        </div>\n`;
+
+                    }
+                });
+                formInnerHtml += `
+                <div class="modal-buttons">
+                    <button type="button" id="cancelAddEditBtn" class="btn-cancel">Cancel</button>
+                    <button type="submit" class="btn-save">Save</button>
+                </div>`;
+
+                wishlistForm.innerHTML = "";
+                wishlistForm.innerHTML = formInnerHtml;
+                //console.log(formInnerHtml);
+                // Cancel Add/Edit
+                //cancelAddEditBtn.addEventListener('click', () => hideModal(addEditModal));
+            } */
+
+            // Function to populate datalist elements from a Firestore document
+            async function populateMenuOptions() {
+                try {
+                    const docRef = db.collection(collectionName).doc("menuOptions");
+                    const docSnap = await docRef.get();
+                    //console.log(docSnap);  // For Debugging
+                    let menuOptions = {};
+
+                    if (!docSnap.exists) {
+                        menuOptions = buildMenuOptions(dataMap);
+                        // console.log(menuOptions);  // For Debugging
+                        console.log("No menuOptions document found. Creating From dataMap values.");
+                        await docRef.set(menuOptions);
+                    } else {
+                        console.log("FireStore Menu Options Already Exist....");
+                        menuOptions = docSnap.data();
+                        // console.log(menuOptions);  // For Debugging
+                    }
+
+                    for (const key in dataMap) {
+                        if (dataMap[key].type === "datalist") {
+                            //console.log("DataList type detected for: " + key);  // For Debugging
+                            const elementId = key;
+                            const element = document.getElementById(`${elementId}List`);
+                            // console.log(element.previousElementSibling);  // For Debugging
+                            if (element) {
+                                // Clear all existing <option> elements
+                                element.replaceChildren();
+                                // Split the string and create new options
+                                const options = menuOptions[key]
+                                    .split(",")
+                                    .map((s) => s.trim())
+                                    .filter((s) => s.length > 0);
+                                options.forEach((optionText) => {
+                                    const option = document.createElement("option");
+                                    option.value = optionText;
+                                    option.textContent = optionText;
+                                    element.appendChild(option);
+                                    // console.log(option);  // For Debugging
+                                });
+                            } else {
+                                //console.log("element with id: " + key+" Doesnt exist!!");  // For Debugging
+                            }
+                        } else {
+                            //console.log("datalist Not detected!");  // For Debugging
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error populating menu options:", error);
+                    showInfoModal("Error loading menu options. Please try again.");
+                }
+            }
+
+            // Build menuOptions dynamically from dataMap
+            function buildMenuOptions(map) {
+                const menuOptions = {};
+                for (const key in map) {
+                    if ((map[key].type === "datalist" || map[key].type === "select") && map[key].defaultOptions) {
+                        //console.log("DataList type detected for: " + key);
+                        menuOptions[key] = map[key].defaultOptions;
+                        //console.log("options for: " + key + ": " + menuOptions[key]);
+                    } else {
+                        //console.log("datalist Not detected!");  // For Debugging
+                    }
+                }
+                return menuOptions;
+            }
+
+            async function generateModalFormOnLoad() {
+                let modalFormInnerHTML = `<input type="hidden" id="docId">\n`;
+                // Input Text Type
+                Object.keys(dataMap).forEach((key) => {
+                    const config = dataMap[key];
+                    if (config.type === "input" && dataMap[key]) {
+                        //
+                        modalFormInnerHTML += `   <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="text" id="${key}" ${config.required ? "required" : ""}>
+                        </div>\n`;
+                    } else if (config.type === "link" && dataMap[key]) {
+                        modalFormInnerHTML += `   <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="url" id="${key}" ${config.required ? "required" : ""}>
+                        </div>\n`;
+                    } else if (config.type === "select" && dataMap[key].defaultOptions) {
+                        let optionsHTML = "";
+                        let options = config.defaultOptions
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter((s) => s.length > 0);
+                        options.forEach((optionText) => {
+                            optionsHTML += `<option value="${optionText}">${optionText}</option>\n`;
+                        });
+                        // console.log(optionsHTML); // For Debugging
+                        modalFormInnerHTML += `   <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <select id="${key}" ${config.required ? "required" : ""}>
+                                ${optionsHTML}
+                            </select>
+                        </div>\n`;
+                    } else if (config.type === "datalist" && dataMap[key].defaultOptions) {
+                        // console.log("Datalist Element Created.."); // For Debugging
+                        modalFormInnerHTML += `   <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="text" id="${key}" list="${key}List" class="datalist-type" enterkeyhint="done" ${config.required ? "required" : ""}>
+                            <datalist id="${key}List"></datalist>
+                        </div>\n`;
+                    }else if (config.type === "photo") {
+                        modalFormInnerHTML += `   <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input
+                                type="file"
+                                id="${key}"
+                                accept="image/png,image/jpeg,image/webp"/
+                                ${config.required ? "required" : ""}>
+                                
+                            </div>\n`;
+                    }else if (config.type === "dropText" && dataMap[key]) {
+                        modalFormInnerHTML +=
+                        `   <div class="form-group">
+                                <label for="${key}">${config.text}</label>
+                                <input type="text" id="${key}" ${config.required ? "required" : ""}>
+                            </div>\n`;
+                    }else if (config.type === "number" && dataMap[key]) {
+                        modalFormInnerHTML += `   <div class="form-group">
+                            <label for="${key}">${config.text}</label>
+                            <input type="number" step="1" id="${key}" value="0" min=${config.min} max=${config.max} inputmode="numeric" />
+                        </div>\n`;
+                    }
+                });
+                modalFormInnerHTML += `   <div class="modal-buttons">
+                    <button type="button" id="cancelAddEditBtn" class="btn-cancel">Cancel</button>
+                    <button type="submit" class="btn-save">Save</button>
+                </div>`;
+
+                wishlistForm.innerHTML = modalFormInnerHTML;
+
+                // Cancel Add/Edit
+                const cancelAddEditBtn = document.getElementById("cancelAddEditBtn");
+                cancelAddEditBtn.addEventListener("click", () => hideModal(addEditModal));
+            }
+
+            function dynamicallyRenderCards(data, doc, dataMap) {
+                let cardButtons = '';
+                let cardDetails = '';
+                let cardTitle = '';
+
+                // Title (special handling)
+                if (dataMap.title) {
+                    cardTitle = `
+                        <div class="card-title">
+                            <h3 id="title" class="highlight-green">${data.title || '-'}</h3>
+                        </div>
+                    `;
+                }
+
+                // Buttons and links
+                Object.keys(dataMap).forEach(key => {
+                    const config = dataMap[key];
+                    if (config.type === "link" && data[key]) {
+                        // You can customize SVG/icon as needed per type/link
+                        cardButtons += `<a href="${data[key]}" target="_blank" class="action-button">${mapLinkSvg}</a>`;
+                    }else if (config.type === "photo" && data[key] && data[key] != "") {
+                        if(config.mode === "display"){
+                            const img = new Image();
+                            img.src = data[key];
+                            if (img.naturalWidth < img.naturalHeight){
+                                cardDetails += `
+                                <img src="${data[key]}" style="height: ${config.height}px;">`;
+                            }else {
+                                cardDetails += `
+                                <img src="${data[key]}" style="width: ${config.height}px;">`;
+                            }
+                        }else if (config.mode === "download"){
+                            console.log("Add Logic For Download here...");
+                        }else {console.log("photo mode value is invalid!")}
+                        
+                        
+                    }/* else if (config.type === "dropText" && data[key]) {
+                        cardDetails += `
+                        <details>
+                            <summary>${config.text}</summary>
+                            <p  id="${key}">${data[key]}</p>
+                        </details>
+
+                        `;
+                    } */
+                });
+
+                // Edit/delete buttons (always present)
+                cardButtons += `
+                    <button class="action-button edit-button" data-id="${doc.id}">${editBtnSvg}</button>
+                    <button class="action-button delete-button" data-id="${doc.id}">${deleteBtnSvg}</button>
+                `;
+
+                // Details
+                Object.keys(dataMap).forEach(key => {
+                    const config = dataMap[key];
+                    if (key !== "title" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText") {
+                        // Generate label with fallback value
+                        let value = data[key] || '-';
+                        let line = "";
+                        if (config.styling === "strong") {
+                            line = `<p class="card-detail"><strong>${config.text}:</strong> <span class="highlight-green card-values" id="${key}"> &nbsp;${value}</span></p>`;
+                            //console.log("this block"); // For Debugging
+                        }else {
+                            line = `<p class="card-detail"><strong>${config.text}:</strong><span class="card-values" id="${key}"> &nbsp;${value}</span></p>`;
+                        }
+                        cardDetails += line;
+                    }else if (config.type === "dropText" && data[key]) {
+                        cardDetails += `
+                        <div class="card-detail">
+                            <details>
+                                <summary>${config.text}</summary>
+                                <p  id="${key}">${data[key]}</p>
+                            </details>
+                        </div>
+
+                        `;
+                    }
+                });
+
+                // Build card HTML
+                return `
+                    <div class="card-header">
+                        ${cardTitle}
+                        <div class="card-buttons">
+                            ${cardButtons}
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        ${cardDetails}
+                    </div>
+                `;
+            }
+
+            // Card rendering function
+            function createCard(doc) {
+                const data = doc.data();
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = dynamicallyRenderCards(data, doc, dataMap);
+                Object.keys(data).forEach(key => {
+                    
+                    if (key !== "timestamp") {
+                        if (dataMap[key] && dataMap[key].clickToCopy) {
+                            // console.log("Key: "+key);
+                            const clickElement = card.querySelector(`#${key}`);
+                            // console.log(clickElement);
+                            addCopyClick(clickElement);
+                        }
+                    }
+                });
+                return card;
+            }
+
+            // Render documents based on search query - Major Modification on v_2.5
+            function renderDocs(query) {
+                wishlistContainer.innerHTML = '';
+                const keywordObjs = parseKeywords(query.toLowerCase());
+
+                const filteredDocs = allDocs.filter(doc => {
+                    const data = doc.data();
+
+                    if (keywordObjs.length === 0) return true;
+
+                    /* return keywordObjs.every(({ word, endsWithSpace }) => {
+                        let regex;
+
+                        // Use whole word match if endsWithSpace, else prefix match
+                        if (endsWithSpace) {
+                            regex = new RegExp(`\\b${escapeRegex(word.trimEnd())}\\b`, 'i'); // whole word match
+                        } else {
+                            regex = new RegExp(`\\b${escapeRegex(word)}`, 'i');    // prefix match
+                        }
+
+                        let searchableText = '';
+                        Object.keys(dataMap).forEach(key => {
+                            if (dataMap[key].filter === true) {
+                                searchableText += ` ${data[key] || ""}`;
+                            }
+                        });
+
+                        return regex.test(searchableText);
+                    });
+                     */
+                    return keywordObjs.every(({ word, endsWithSpace }) => {
+                        // Regex to detect numeric comparison query like ">550" or "<600"
+                        const numericMatch = word.match(/^([<>])(\d+)$/);
+                        
+                        if (numericMatch) {
+                            const operator = numericMatch[1];
+                            const numValue = Number(numericMatch[2]);
+                            
+                            // Check numeric fields for any matching number by operator
+                            /* return Object.keys(dataMap).some(key => {
+                                if (dataMap[key].isNumeric) {  // Identify numeric fields
+                                    const fieldVal = Number(data[key]);
+                                    if (isNaN(fieldVal)) return false;
+                                    if (operator === '>' && fieldVal > numValue) return true;
+                                    if (operator === '<' && fieldVal < numValue) return true;
+                                }
+                                return false;
+                            }); */
+
+                            // Check numeric fields for any matching number by operator
+                            return Object.keys(dataMap).some(key => {
+                                if (dataMap[key].isNumeric) { // Identify numeric fields
+                                    const rawVal = data[key];
+                                    if (rawVal == null) return false;
+
+                                    // Extract all numeric substrings (including decimals, negatives)
+                                    const matches = String(rawVal).match(/-?\d+(\.\d+)?/g);
+                                    if (!matches) return false;
+
+                                    // Check if any extracted number satisfies the condition
+                                    return matches.some(numStr => {
+                                        const fieldVal = parseFloat(numStr);
+                                        if (operator === '>' && fieldVal > numValue) {
+                                            /* console.log(`*********\n data[key]= ${rawVal}\n Match= ${fieldVal}\n*********\n`); //For Debugging */
+                                            return true;
+                                        }
+                                        if (operator === '<' && fieldVal < numValue) {
+                                            /* console.log(`#########\n data[key]= ${rawVal}\n Match= ${fieldVal}\n#########\n`); //For Debugging */
+                                            return true;
+                                        }
+                                        return false;
+                                    });
+                                }
+                                return false;
+                            });
+
+                        }
+
+                        // Fallback to your existing regex matching for string search keywords
+                        const regex = endsWithSpace 
+                            ? new RegExp(`\\b${escapeRegex(word)}\\b`, 'i') 
+                            : new RegExp(`\\b${escapeRegex(word)}`, 'i');
+
+                        let searchableText = '';
+                        Object.keys(dataMap).forEach(key => {
+                            if (!dataMap[key].isNumeric && dataMap[key].filter === true) {
+                                searchableText += ` ${data[key] || ''}`;
+                            }
+                        });
+
+                        return regex.test(searchableText);
+                    });
+
+                });
+
+                visibleEntriesCount = 0;
+                if (filteredDocs.length === 0) {
+                    noDataMessage.style.display = 'block';
+                    noDataMessage.textContent = 'No matching entries found.';
+                } else {
+                    noDataMessage.style.display = 'none';
+                    filteredDocs.forEach(doc => {
+                        const card = createCard(doc);
+                        wishlistContainer.appendChild(card);
+                        visibleEntriesCount++;
+                    });
+                }
+                updateCountText();
+            }
+
+            // Delegate click events for edit and delete buttons on the wishlist container
+            wishlistContainer.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-button');
+                const deleteBtn = e.target.closest('.delete-button');
+                
+                if (editBtn) {
+                    const docId = editBtn.dataset.id;
+                    console.log(docId); // For Debugging
+                    db.collection(collectionName).doc(docId).get().then(doc => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            docIdInput.value = docId;
+
+                            Object.keys(dataMap).forEach(key => {
+                                // const config = dataMap[key];
+                                if (dataMap[key].type === "photo"){
+                                    editingPhotoOGBase64[key] = data[key];
+                                    //console.log(key); // For Debugging
+                                    // console.log(editingPhotoOGBase64[key]); // For Debugging
+                                    //console.log("photo data");
+                                    return;
+                                }else {
+                                    // document.getElementById(`${key}`).value = data[key] || ''; // Old Code v_2.6
+                                    wishlistForm.querySelector(`#${key}`).value = data[key] || '';
+                                }
+                                
+                            });
+                            modalTitle.textContent = 'Edit Entry';
+                            showModal(addEditModal);
+                        }
+                    }).catch(error => {
+                        console.error("Error fetching document for edit: ", error);
+                        showInfoModal("Could not load entry for editing.");
+                    });
+                }
+
+                if (deleteBtn) {
+                    const docId = deleteBtn.dataset.id;
+                    console.log(docId); // For Debugging
+                    hideModal(addEditModal);
+                    showModal(deleteModal);
+                    confirmDeleteBtn.dataset.id = docId;
+                    
+                }
+            });
+
+            // Handle form submission for Add/Edit
+            wishlistForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+            
+                const docId = docIdInput.value;
+                let data = {};
+                /* Object.keys(dataMap).forEach(async key => {....}); Old Code Block....*/ 
+                for (const key of Object.keys(dataMap)) {
+                    // const element = document.getElementById(key); // Old Code v_2.6
+                    const element = wishlistForm.querySelector(`#${key}`);
+                    // console.log(element); // For Debugging
+                    if (element) {
+                        const rawValue = element.value.trim();
+                        
+                            if (dataMap[key].type === "link") {
+                                data[key] = rawValue;
+                            }else if (dataMap[key].type === "photo"){
+                                data[key] = editingPhotoOGBase64[key];
+                                // console.log(data[key]); // For Debugging
+                                const input = document.getElementById(key);
+                                
+                                if (input && input.files && input.files.length > 0) 
+                                {
+                                    const photoFile = input.files[0];
+                                    // console.log(photoFile); // For Debugging
+            
+                                    const heightLimit = dataMap[key].height;
+                                    // console.log("heightLimit: " + heightLimit); // For Debugging
+                                    const photoBase64 = await fileToBase64(photoFile, heightLimit);
+                                    // console.log("photoBase64: " + photoBase64); // For Debugging
+                                    data[key] = photoBase64;
+                                    // console.log("[key]: " + key); // For Debugging
+                                    // console.log("data[key]: " + data[key]); // For Debugging
+                                    console.log("photoFile is NOT EMPTY");
+                                }else {
+                                    console.log("photoFile is EMPTY");
+                                    // data[key] = editingPhotoOGBase64[key]; //This code is not needed
+                                    if (typeof data[key] === 'undefined') {
+                                        data[key] = "";
+                                    }
+                                }
+                                //console.log(data[key]); // For Debugging
+                            } else {
+                                if (dataMap[key].capitalize === true){
+                                    /* console.log("capitalize is Ture"); //For Debugging */
+                                    data[key] = capitalizeEachWord(rawValue);
+
+                                }else {
+                                    /* console.log("capitalize is False"); //For Debugging */
+                                    data[key] = rawValue;
+                                }
+                            }
+                        
+                    } else {
+                        data[key] = null;
+                    }
+                };
+                // Add timestamp as the last key
+                data.timestamp = Date.now();
+                // console.log(data); // For Debugging
+                const notificationTimeout = 1000;
+
+                try {
+                    if (docId) {
+                        await db.collection(collectionName).doc(docId).update(data);
+                        // showInfoModal("Entry updated successfully!");
+                        const notificationMessage = "Entry updated successfully!";
+                        activatePopupNotification(notificationMessage, undefined, notificationTimeout);
+                    } else {
+                        await db.collection(collectionName).add(data);
+                        //console.log(data); // For Debugging
+                        const notificationMessage ="New entry added successfully!";
+                        activatePopupNotification(notificationMessage, undefined, notificationTimeout);
+                        // showInfoModal("New entry added successfully!");
+                        //visibleEntriesCount ++;
+                        updateCountText();
+                    }
+                    hideModal(addEditModal);
+                } catch (error) {
+                    console.error("Error saving document: ", error);
+                    showInfoModal("Error saving entry. Please try again.");
+                }
+            });
+
+        </script>
+    </body>
+</html>
