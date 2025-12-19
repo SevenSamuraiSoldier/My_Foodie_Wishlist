@@ -947,68 +947,6 @@
                 renderDocs(searchTerm);
             });
 
-            /* function populateAddEditPanel(docId = "docId") {
-                let formInnerHtml = `<input type="hidden" id="${docId}">\n`;
-                Object.keys(dataMap).forEach((key) => {
-                    const config = dataMap[key];
-                    if (config.type === "input") {
-                        formInnerHtml += `
-                        <div class="form-group">
-                            <label for="${key}">${config.text}</label>
-                            <input type="text" id="${key}">
-                        </div>\n`;
-                    }
-                    if (config.type === "link") {
-                        formInnerHtml += `
-                        <div class="form-group">
-                            <label for="${key}">${config.text}</label>
-                            <input type="url" id="${key}">
-                        </div>\n`;
-                    }
-                    if (config.type === "datalist" || config.type === "select") {
-                        let options = config.defaultOptions.split(",").map((s) => s.trim());
-                        //console.log(options);
-                        let optionsHtml = "";
-                        options.forEach((option) => {
-                            //console.log(option);
-                            optionsHtml += `
-                            <option value="${option}">${option}</option>\n`;
-                        });
-                        formInnerHtml += `
-                        <div class="form-group">
-                            <label for="${key}">${config.text}</label>
-                            <input type="text" id="${key}" list="${key}List" class="datalist-type" enterkeyhint="done">
-                            <datalist id="${key}List">
-                                ${optionsHtml}
-                            </datalist>
-                        </div>`;
-                        //console.log(optionsHtml);
-                    }
-                    if (config.type === "photo"){
-                        formInnerHtml += `
-                        <div class="form-group">
-                            <label for="${key}">${config.text}</label><br/>
-                            <input
-                                type="file"
-                                id="${key}"
-                                accept="image/png,image/jpeg,image/webp"/><br/>
-                        </div>\n`;
-
-                    }
-                });
-                formInnerHtml += `
-                <div class="modal-buttons">
-                    <button type="button" id="cancelAddEditBtn" class="btn-cancel">Cancel</button>
-                    <button type="submit" class="btn-save">Save</button>
-                </div>`;
-
-                wishlistForm.innerHTML = "";
-                wishlistForm.innerHTML = formInnerHtml;
-                //console.log(formInnerHtml);
-                // Cancel Add/Edit
-                //cancelAddEditBtn.addEventListener('click', () => hideModal(addEditModal));
-            } */
-
             // Function to populate datalist elements from a Firestore document
             async function populateMenuOptions() {
                 try {
@@ -1297,11 +1235,13 @@
                      */
                     return keywordObjs.every(({ word, endsWithSpace }) => {
                         // Regex to detect numeric comparison query like ">550" or "<600"
-                        const numericMatch = word.match(/^([<>])(\d+)$/);
+                        // const numericMatch = word.match(/^([<>])(\d+)$/); //Old Code v_3.0
+                        const numericMatch = word.match(/^([<>])(\d+(\.\d+)?)$/);
                         
                         if (numericMatch) {
                             const operator = numericMatch[1];
                             const numValue = Number(numericMatch[2]);
+                            // console.log ("Query Value: " + numValue); //For Debugging
                             
                             // Check numeric fields for any matching number by operator
                             /* return Object.keys(dataMap).some(key => {
@@ -1327,6 +1267,7 @@
                                     // Check if any extracted number satisfies the condition
                                     return matches.some(numStr => {
                                         const fieldVal = parseFloat(numStr);
+                                        // console.log(fieldVal); //For Debugging
                                         if (operator === '>' && fieldVal > numValue) {
                                             /* console.log(`*********\n data[key]= ${rawVal}\n Match= ${fieldVal}\n*********\n`); //For Debugging */
                                             return true;
