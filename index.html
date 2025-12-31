@@ -60,12 +60,13 @@
             .action-button {
                 background-color: #2c2c2c;
                 color: #e0e0e0;
-                padding: 0.5rem;
+                /* padding: 0.5rem; */ /* Removed in v_3.8 */
                 border-radius: 9999px;
                 box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
                 transition: background-color 0.3s ease-in-out;
                 border: none;
                 cursor: pointer;
+                padding: 8PX; /* Added in v_3.8 */
             }
 
             .action-button:hover {
@@ -147,6 +148,7 @@
                 padding: 1rem;
                 box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
                 border: 1px solid #333;
+                min-height: 160px; /* Added in v_3.8 */
             }
             .card img {border-radius: 0.5rem;}
             .card-header {
@@ -169,16 +171,18 @@
                 margin-top: 0.25em;
                 /* margin-block: 0.25em; */
                 margin-bottom: 0.5em;
-                margin-right: 4rem;
+                /* margin-right: 4rem; */ /* Removed in v_3.8 */
+                margin-right: 50px; /* Added in v_3.8 */
             }
 
             .card-buttons {
                 display: flex;
-                gap: 0.5rem;
+                /* gap: 0.5rem; */ /* Removed in v_3.8 */
                 position: absolute;
                 flex-direction: column;
                 top: 0;
                 right: 0;
+                gap: 6px; /* Added in v_3.8 */
             }
 
             .card-detail {
@@ -186,8 +190,8 @@
                 color: #c0c0c0;
                 margin-bottom: 0.25rem;
                 margin-top: 0.5rem;
-                /* margin-right: 4rem; */
-                margin-right: 1rem;
+                /* margin-right: 1rem; */ /* Removed in v_3.8 */
+                margin-right: 50px; /* Added in v_3.8 */
             }
             .card-long-text {
                 margin-right: unset;
@@ -411,6 +415,12 @@
                     align-content: center;
                     justify-content: flex-start;
                 }
+
+                /* Below block Added in v_3.8 */
+                .card-buttons {
+                    gap: 0.5rem;
+                }
+
                 summary {font-size: 1.5rem;}
                 details > p {
                     font-size: 1.35rem;
@@ -421,6 +431,9 @@
                     max-width: unset;
                     padding: 1rem;
                     padding-inline: 0.25rem;
+                }
+                .action-button {
+                    padding: 0.5rem; /* Added in v_3.8 */
                 }
                 .action-button svg {
                     height: var(--action-btn-svg-size-landscape);
@@ -489,7 +502,61 @@
                 text-align: center;
                 /* cursor: none; */
             }
-            
+            .label-hidden {
+                display: none;
+            }
+            .required-field {
+                position: relative;
+                /* padding-top: 5px; */
+                /* padding-right: 15px; */
+                width: fit-content;
+                margin-inline: auto;
+            }
+            .required-field::after {
+                content: '*';
+                position: absolute;
+                top: 0;
+                right: 0;
+                right: -15px;
+                color: red;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            .not-required-field {
+                position: relative;
+                /* padding-top: 5px; */
+                /* padding-right: 6rem; */
+                width: fit-content;
+                margin-inline: auto;
+            }
+            .not-required-field::after {
+                content: ' (Optional)';
+                position: absolute;
+                top: 0; /* Top of label */
+                /* right: 0; */
+                right: -75px;
+                color: #2fa760;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            #rules-label {
+                position: fixed;
+                top: 10px;
+                left: 15%;
+                display: inline-block;
+                font-size: 14px;
+                color: #686767;
+            }
+            #rules-label::before {
+                content: '*';
+                color: red;
+                font-size: 14px;
+                position: absolute;
+                top: 0;
+                left: -16px;
+            }
         </style>
     </head>
     <body>
@@ -542,6 +609,7 @@
                 <div id="modals" class="modal-overlay">
                     <!-- Add/Edit Modal -->
                     <div id="addEditModal" class="modal-content">
+                        <div id="rules-label">Required Field</div>
                         <h2 id="modalTitle">Add New Entry</h2>
                         <form id="wishlistForm">
                             <input type="hidden" id="docId" />
@@ -571,28 +639,32 @@
         </div>
     
         <script>
-            const collectionName = "My_Foodie_Wishlist";
-            const appTitle = "My Foodie Wishlist";
+            //Paste the App Specific Settings Below
 
-            const dataMap = {
-                title: {type: "input", text: "Name", filter: true, clickToCopy: true},
+const collectionName = "My_Foodie_Wishlist";
+const appTitle = "My Foodie Wishlist";
+
+const dataMap = {
+                title: {type: "input", text: "Name", filter: true, clickToCopy: true, required: true},
                 Link: {type: "link", text: "Google Maps Link", filter: true},
                 Location: {type: "input", text: "Location", filter: true, styling: "strong", clickToCopy: true},
-                Type: {type: "datalist", text: "Type", filter: true, styling: "strong", defaultOptions: "Cafe, Restaurant, Bar, Pub, Street Food, Fast Food, Fine Dining, Disco, Food Joint, Bakery, Food Stall, Local Bar", clickToCopy: true},
-                GoogleRatings: {type: "input", text: "Google Rating", filter: true, styling: "strong", isNumeric:true, clickToCopy: true},
+                Type: {type: "datalist", text: "Type", filter: true, defaultOptions: "Cafe, Restaurant, Bar, Pub, Street Food, Fast Food, Fine Dining, Disco, Food Joint, Bakery, Food Stall, Local Bar", clickToCopy: true},
+                GoogleRatings: {type: "input", text: "Google Rating", filter: true, isNumeric: true, clickToCopy: true},
                 Rating: {type: "datalist", text: "Rating", filter: true, styling: "strong", defaultOptions: "Not Rated,A*, A+, A, B+, B, C+, C", clickToCopy: true},
                 Cuisine: {type: "datalist", text: "Cuisine", filter: true, defaultOptions: "Indian, Italian, Chinese, Mexican, Thai, Japanese, Continental, French, Mughlai, Irani, Western Snacks, Indian Bar Food", clickToCopy: true},
-                Drinks: {type: "select", text: "Drinks", filter: true, defaultOptions: "No, Yes, Maybe"},
-                price: {type: "datalist", text: "$", filter: true, styling: "strong", defaultOptions: "Lowest, Low, Moderate, High, Very High", clickToCopy: true},
+                Drinks: {type: "select", text: "Drinks", filter: true, styling: "strong", defaultOptions: "No, Yes, Maybe"},
+                price: {type: "datalist", text: "$", filter: true, defaultOptions: "Lowest, Low, Moderate, High, Very High", clickToCopy: true},
                 BeenTo: {type: "select", text: "Visited", filter: true, defaultOptions: "No, Yes", clickToCopy: true},
-                Note: {type: "input", text: "Note", filter: true, clickToCopy: true}
-            };
-            
-            const sortBy = "timestamp";
-            const sortOrder = "desc";
+                Note: {type: "input", text: "Note", filter: true, clickToCopy: true},
+                fav: {type: "datalist", text: "Fav.", labelVisibility: false, filter: true, defaultOptions: ",Fav."}
+            };;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
 
+            const sortBy = "timestamp";
+            const sortOrder = "desc";
+            /* const keywordForFavorites = "fav"; */
+            
             console.log("Collection Name: " + collectionName);
             const prefixCountText = "No. of Entries:";
 
@@ -611,9 +683,13 @@
                 '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q17-72 85-137t145-65q33 0 56.5 23.5T520-716v242l64-62 56 56-160 160-160-160 56-56 64 62v-242q-76 14-118 73.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-48-22-89.5T600-680v-93q74 35 117 103.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm220-358Z"></path></svg>';
             const addBtnSvg = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"></path></svg>';
             const editBtnSvg =
-                '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="24" height="24" style="color:#a0a0a0;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14.25v2.25c0 1.05-.84 1.89-1.89 1.89H5.732A2.25 2.25 0 0 1 3.487 16.2L3 13.5M9.375 14.625l4.5-4.5" /></svg>';
+                `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#4a90e2">
+                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+                </svg>`;  
             const deleteBtnSvg =
-                '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="24" height="24" style="color:#a0a0a0;"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.93a2.25 2.25 0 0 1-2.244-2.077L4.74 5.61a1.5 1.5 0 0 1-.342-.052M4.74 5.61a1.5 1.5 0 0 1 .342-.052M3.75 4.5h16.5a1.5 1.5 0 0 1 0 3H3.75a1.5 1.5 0 0 1 0-3Z" /></svg>';
+                `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ff3b3b">
+                <path d="m376-300 104-104 104 104 56-56-104-104 104-104-56-56-104 104-104-104-56 56 104 104-104 104 56 56Zm-96 180q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520Zm-400 0v520-520Z"/>
+                </svg>`;
             const mapLinkSvg = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m256-240-56-56 384-384H240v-80h480v480h-80v-344L256-240Z"></path></svg>`;
 
             // Initialize Firebase services
@@ -644,6 +720,7 @@
             const notificationContainer = document.getElementById("notification-container");
             const notificationPopup = document.getElementById("notification-popup");
             let editingPhotoOGBase64 = {};
+            
 
             //----Helper Functions---Generalised Code--------------//////////////
             // Helper function to show a modal
@@ -866,6 +943,34 @@
 
             }
 
+            // Helper function to get no.of rows as an integer from dataMap.rows 
+            const getRows = (config, defaultValue = 3) => {
+                const parsed = parseInt(config?.rows, 10);
+                return isNaN(parsed) ? defaultValue : parsed;
+            };
+
+            // Helper function to Toggle Filled Heart (fav.) & also to update the same in firebase db
+            function addFavorites(e) {
+                if (e.target.closest('.fav-button')) {
+                    const favBtn = e.target.closest('.fav-button');
+                    const docId = favBtn.dataset.id;
+                    const currentRating = favBtn.dataset.fav || '';
+                    const newRating = currentRating === "Fav." ? "" : "Fav.";
+                    // const collectionName = 'your-collection-name'; // Update this
+                    
+                    // Update Firestore
+                    db.collection(collectionName).doc(docId).set({ 
+                        fav: newRating 
+                    }, { merge: true });
+                    
+                    // Update UI immediately
+                    favBtn.querySelector('path').setAttribute('fill', newRating === "Fav." ? 'red' : '#5b5b5b');
+                    favBtn.dataset.fav = newRating;
+                    favBtn.closest('.card-header')?.setAttribute('data-fav', newRating.toLowerCase());
+                }
+            }
+
+
             /////////////////////////////////////////////////////////////////////
 
             window.onload = function () {
@@ -947,6 +1052,7 @@
                 renderDocs(searchTerm);
             });
 
+            
             // Function to populate datalist elements from a Firestore document
             async function populateMenuOptions() {
                 try {
@@ -1017,18 +1123,28 @@
 
             async function generateModalFormOnLoad() {
                 let modalFormInnerHTML = `<input type="hidden" id="docId">\n`;
-                // Input Text Type
+                
                 Object.keys(dataMap).forEach((key) => {
                     const config = dataMap[key];
+
+                    //To Add an asterisk (*) at the top-right corner of a required = true fields
+                    let requiredClass = "";
+                    if(config.required && config.required === true){
+                        requiredClass = `class="required-field"`;
+                    }else {
+                        //optional code for adding "(Optional)" text for all optional fields.
+                        /* requiredClass = `class="not-required-field"`; */
+                    }
+
                     if (config.type === "input" && dataMap[key]) {
                         //
                         modalFormInnerHTML += `   <div class="form-group">
-                            <label for="${key}">${config.text}</label>
+                            <label for="${key}" ${requiredClass} >${config.text}</label>
                             <input type="text" id="${key}" ${config.required ? "required" : ""}>
                         </div>\n`;
                     } else if (config.type === "link" && dataMap[key]) {
                         modalFormInnerHTML += `   <div class="form-group">
-                            <label for="${key}">${config.text}</label>
+                            <label for="${key}" ${requiredClass} >${config.text}</label>
                             <input type="url" id="${key}" ${config.required ? "required" : ""}>
                         </div>\n`;
                     } else if (config.type === "select" && dataMap[key].defaultOptions) {
@@ -1042,7 +1158,7 @@
                         });
                         // console.log(optionsHTML); // For Debugging
                         modalFormInnerHTML += `   <div class="form-group">
-                            <label for="${key}">${config.text}</label>
+                            <label for="${key}" ${requiredClass} >${config.text}</label>
                             <select id="${key}" ${config.required ? "required" : ""}>
                                 ${optionsHTML}
                             </select>
@@ -1050,13 +1166,13 @@
                     } else if (config.type === "datalist" && dataMap[key].defaultOptions) {
                         // console.log("Datalist Element Created.."); // For Debugging
                         modalFormInnerHTML += `   <div class="form-group">
-                            <label for="${key}">${config.text}</label>
+                            <label for="${key}" ${requiredClass} >${config.text}</label>
                             <input type="text" id="${key}" list="${key}List" class="datalist-type" enterkeyhint="done" ${config.required ? "required" : ""}>
                             <datalist id="${key}List"></datalist>
                         </div>\n`;
                     }else if (config.type === "photo") {
                         modalFormInnerHTML += `   <div class="form-group">
-                            <label for="${key}">${config.text}</label>
+                            <label for="${key}" ${requiredClass} >${config.text}</label>
                             <input
                                 type="file"
                                 id="${key}"
@@ -1065,14 +1181,25 @@
                                 
                             </div>\n`;
                     }else if (config.type === "dropText" && dataMap[key]) {
-                        modalFormInnerHTML +=
-                        `   <div class="form-group">
-                                <label for="${key}">${config.text}</label>
-                                <input type="text" id="${key}" ${config.required ? "required" : ""}>
-                            </div>\n`;
+                        if(config.inputFieldType === "input"){
+                            modalFormInnerHTML +=
+                            `   <div class="form-group">
+                                    <label for="${key}" ${requiredClass} >${config.text}</label>
+                                    <input type="text" id="${key}" ${config.required ? "required" : ""}>
+                                </div>\n`;
+
+                        }else if(config.inputFieldType === "textarea") {
+                            modalFormInnerHTML +=
+                            `   <div class="form-group">
+                                    <label for="${key}" ${requiredClass} >${config.text}</label>
+                                    <textarea id="${key}" rows="${getRows(config)}" cols="50" ${config.required ? "required" : ""}></textarea>
+                                </div>\n`;
+
+                        }
+                        
                     }else if (config.type === "number" && dataMap[key]) {
                         modalFormInnerHTML += `   <div class="form-group">
-                            <label for="${key}">${config.text}</label>
+                            <label for="${key}" ${requiredClass} >${config.text}</label>
                             <input type="number" step="1" id="${key}" value="0" min=${config.min} max=${config.max} inputmode="numeric" />
                         </div>\n`;
                     }
@@ -1125,35 +1252,53 @@
                         }else {console.log("photo mode value is invalid!")}
                         
                         
-                    }/* else if (config.type === "dropText" && data[key]) {
-                        cardDetails += `
-                        <details>
-                            <summary>${config.text}</summary>
-                            <p  id="${key}">${data[key]}</p>
-                        </details>
-
-                        `;
-                    } */
+                    }
                 });
 
+                const isFavorite = data.fav === "Fav.";
                 // Edit/delete buttons (always present)
                 cardButtons += `
                     <button class="action-button edit-button" data-id="${doc.id}">${editBtnSvg}</button>
                     <button class="action-button delete-button" data-id="${doc.id}">${deleteBtnSvg}</button>
+                    <button class="action-button fav-button" data-id="${doc.id}" data-fav="${data.fav || ''}" style="fill: ${isFavorite ? 'red' : '#5b5b5b'};">
+                        <svg width="24px" height="24px" viewBox="0 0 16 16" fill="none">
+                            <path d="M1.24 8.24L8 15l6.76-6.76C15.55 7.45 16 6.37 16 5.24V5.05C16 2.81 14.18 1 11.95 1c-1.23 0-2.39.56-3.17 1.52L8 3.5l-.78-.98C6.45 1.56 5.28 1 4.05 1 1.81 1 0 2.81 0 5.05v.19c0 1.13.45 2.2 1.24 3z" fill="${isFavorite ? 'red' : '#5b5b5b'}"/>
+                        </svg>
+                    </button>
                 `;
 
                 // Details
                 Object.keys(dataMap).forEach(key => {
                     const config = dataMap[key];
-                    if (key !== "title" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText") {
+                    let labelHiddenFlag;
+                    let suffix = "";
+                    if (dataMap[key].hasOwnProperty('labelVisibility') && config.labelVisibility === false) {
+                        // console.log("Label is Hidden");
+                        labelHiddenFlag = `class="label-hidden"`;
+                        
+                    }else {
+                        labelHiddenFlag = ``;
+                        /* console.log("label is Shown"); */
+                    }
+
+                    if (dataMap[key].hasOwnProperty('dataSuffix') && config.dataSuffix.trim() != "") {
+                        if (data[key].trim() != ""){
+                            suffix = config.dataSuffix.trim();
+                            // console.log(`Suffix: ${suffix}`); //For Debugging
+                        }
+                        
+                    }
+
+                    if (key !== "title" && key !== "fav" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText") {
                         // Generate label with fallback value
-                        let value = data[key] || '-';
+                        // let value = data[key] || '-';
+                        let value = data[key] || '';
                         let line = "";
                         if (config.styling === "strong") {
-                            line = `<p class="card-detail"><strong>${config.text}:</strong> <span class="highlight-green card-values" id="${key}"> &nbsp;${value}</span></p>`;
+                            line = `<p class="card-detail"><strong ${labelHiddenFlag}>${config.text}: &nbsp;</strong> <span class="highlight-green card-values" id="${key}">${value} ${suffix}</span></p>`;
                             //console.log("this block"); // For Debugging
                         }else {
-                            line = `<p class="card-detail"><strong>${config.text}:</strong><span class="card-values" id="${key}"> &nbsp;${value}</span></p>`;
+                            line = `<p class="card-detail"><strong ${labelHiddenFlag}>${config.text}:  &nbsp;</strong><span class="card-values" id="${key}">${value} ${suffix}</span></p>`;
                         }
                         cardDetails += line;
                     }else if (config.type === "dropText" && data[key]) {
@@ -1161,7 +1306,7 @@
                         <div class="card-detail">
                             <details>
                                 <summary>${config.text}</summary>
-                                <p  id="${key}">${data[key]}</p>
+                                <p  id="${key}">${data[key]} ${suffix}</p>
                             </details>
                         </div>
 
@@ -1310,6 +1455,7 @@
                     filteredDocs.forEach(doc => {
                         const card = createCard(doc);
                         wishlistContainer.appendChild(card);
+                        card.addEventListener('click', addFavorites);
                         visibleEntriesCount++;
                     });
                 }
@@ -1339,7 +1485,17 @@
                                     return;
                                 }else {
                                     // document.getElementById(`${key}`).value = data[key] || ''; // Old Code v_2.6
-                                    wishlistForm.querySelector(`#${key}`).value = data[key] || '';
+
+                                    //Removed in v_3.7
+                                    // wishlistForm.querySelector(`#${key}`).value = data[key] || '';
+
+                                    //Added in v_3.7
+                                    const element = wishlistForm.querySelector(`#${key}`);
+                                    if (element) {
+                                        element.value = data[key] || "";
+                                    } else {
+                                        console.warn(`Element with ID '${key}' not found in form`);
+                                    }
                                 }
                                 
                             });
