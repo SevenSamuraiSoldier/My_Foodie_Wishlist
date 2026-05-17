@@ -8,19 +8,32 @@
         <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
 
         <style>
-            /* Rose Pine Moon Theme */
+            /* 0. OG Default Theme 01 */
             :root {
-                --bg-main: #232136;
-                --text-title-main: #eb6f92;
-                --bg-card: #2a273f;
-                --text-card-title: #f6c177;
-                --text-data: #807ab4;
+                --bg-main: #121212;
+                --text-title-main: #0d9488;
+                --bg-card: #1e1e1e;
+                --text-card-title: #de3d61;
+                --text-data: #b488c6;
                 --text-keys-data: #a0a0a0;
-                --card-color-finished: #393552;
-                --text-data-highlighted: #9ccfd8; 
+                --card-color-finished: #19381c;
+                --text-data-highlighted: #2dd4bf;
 
             }
 
+            /* 0. Default Theme 02 */
+            /* :root {
+                --bg-main: #1a1b26;
+                --text-title-main: #7aa2f7;
+                --bg-card: #24283b;
+                --text-card-title: #f7768e;
+                --text-data: #bb9af7;
+                --text-keys-data: #a0a0a0;
+                --card-color-finished: #2d452f; 
+
+            } */
+
+            
             :root {
                 --action-btn-svg-size: 24px;
                 --action-btn-svg-size-landscape: 24px;
@@ -865,13 +878,11 @@ const dataMap = {
 };
         ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            
-
         ////////////////////////////////////////////////////////////////////////////////////////////////
             const sortBy = "timestamp";
             const sortOrder = "desc";
             /* const keywordForFavorites = "fav"; */
-            const versionNumber = 4.4;
+            const versionNumber = 4.5;
             const versionFlashTime = 1000; // in ms (1000 ms = 1 sec)
             
             console.log("Collection Name: " + collectionName);
@@ -929,6 +940,7 @@ const dataMap = {
             const notificationContainer = document.getElementById("notification-container");
             const notificationPopup = document.getElementById("notification-popup");
             let editingPhotoOGBase64 = {};
+            let debouncingDelay = 500; //in miliseconds
             
 
             //----Helper Functions---Generalised Code--------------//////////////
@@ -1269,11 +1281,36 @@ const dataMap = {
             // Cancel delete
             cancelDeleteBtn.addEventListener("click", () => hideModal(deleteModal));
 
-            // Search bar input Ebent Listener
+            //Below Debouncing Code Block is added in v_4.5 ----------------------------------
+            // 1. Create the reusable debounce helper
+            function debounce(func, delay) {
+                let timeoutId;
+                
+                return function (...args) {
+                    // Clear the previous timer if the user is still typing
+                    clearTimeout(timeoutId);
+                    
+                    // Start a new timer
+                    timeoutId = setTimeout(() => {
+                        func.apply(this, args);
+                    }, delay);
+                };
+            }
+            // 2. Wrap your heavy render function with a 300ms delay
+            const debouncedRenderDocs = debounce((searchTerm) => {
+                renderDocs(searchTerm);
+            }, debouncingDelay);
+            // 3. Search bar input Event Listener -- Updated in v_4.5
+            searchInput.addEventListener('input', (e) => {
+                debouncedRenderDocs(e.target.value);
+            });
+            ///////////////------------------------------------------------------------------
+
+            /* // Old Code v_4.4 ----Search bar input Event Listener -- 
             searchInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value;
                 renderDocs(searchTerm);
-            });
+            }); */
 
             
             // Function to populate datalist elements from a Firestore document
@@ -1573,7 +1610,7 @@ const dataMap = {
                             if(data[key] === dataMap[key].cardColorKey) {
                                 // card.style.background = "#2d452f";
                                 card.style.setProperty('background-color', 'var(--card-color-finished)');
-                                console.log("card color changed!");
+                                // console.log("card color changed!");
                             }
                         }
                     }
@@ -1591,26 +1628,6 @@ const dataMap = {
 
                     if (keywordObjs.length === 0) return true;
 
-                    /* return keywordObjs.every(({ word, endsWithSpace }) => {
-                        let regex;
-
-                        // Use whole word match if endsWithSpace, else prefix match
-                        if (endsWithSpace) {
-                            regex = new RegExp(`\\b${escapeRegex(word.trimEnd())}\\b`, 'i'); // whole word match
-                        } else {
-                            regex = new RegExp(`\\b${escapeRegex(word)}`, 'i');    // prefix match
-                        }
-
-                        let searchableText = '';
-                        Object.keys(dataMap).forEach(key => {
-                            if (dataMap[key].filter === true) {
-                                searchableText += ` ${data[key] || ""}`;
-                            }
-                        });
-
-                        return regex.test(searchableText);
-                    });
-                     */
                     return keywordObjs.every(({ word, endsWithSpace }) => {
                         // Regex to detect numeric comparison query like ">550" or "<600"
                         // const numericMatch = word.match(/^([<>])(\d+)$/); //Old Code v_3.0
@@ -1621,17 +1638,6 @@ const dataMap = {
                             const numValue = Number(numericMatch[2]);
                             // console.log ("Query Value: " + numValue); //For Debugging
                             
-                            // Check numeric fields for any matching number by operator
-                            /* return Object.keys(dataMap).some(key => {
-                                if (dataMap[key].isNumeric) {  // Identify numeric fields
-                                    const fieldVal = Number(data[key]);
-                                    if (isNaN(fieldVal)) return false;
-                                    if (operator === '>' && fieldVal > numValue) return true;
-                                    if (operator === '<' && fieldVal < numValue) return true;
-                                }
-                                return false;
-                            }); */
-
                             // Check numeric fields for any matching number by operator
                             return Object.keys(dataMap).some(key => {
                                 if (dataMap[key].isNumeric) { // Identify numeric fields
@@ -1685,10 +1691,44 @@ const dataMap = {
                     noDataMessage.textContent = 'No matching entries found.';
                 } else {
                     noDataMessage.style.display = 'none';
-                    filteredDocs.forEach(doc => {
-                        const card = createCard(doc);
+                    // const startTime = performance.now();
+                    let searchTerm = query.toLowerCase();
+                    const isSearching = searchTerm !== ""; // Cache the boolean so we don't re-evaluate text inside the loop
+                    const docsArray = filteredDocs.docs || filteredDocs;
+                    // STEP 1: Extract data exactly ONCE per document (O(N))
+                    const preparedDocs = docsArray.map((doc) => {
+                        const data = doc.data();
+                        // Clean the string once: lowercase it, remove spaces
+                        const cleanFav = String(data.fav || "")
+                            .trim()
+                            .toLowerCase();
+                        return {
+                            rawDoc: doc,
+                            // Match both 'fav' and 'fav.' safely without heavy string methods
+                            isFav: cleanFav.includes("fav"),
+                            timestamp: data.timestamp || 0,
+                        };
+                    });
+                    // STEP 2: Sort using pre-extracted primitive values (Incredibly fast)
+                    preparedDocs.sort((a, b) => {
+                        if (isSearching) {
+                            if (a.isFav && !b.isFav) return -1;
+                            if (!a.isFav && b.isFav) return 1;
+                        }
+                        return b.timestamp - a.timestamp; // Raw number subtraction is lightning fast
+                    });
+
+                    /* const endTime = performance.now();
+                    const duration = endTime - startTime;
+                    console.log(`Code took ${duration.toFixed(4)} milliseconds to execute.`); */
+
+                    // STEP 3: Render to the DOM
+                    visibleEntriesCount = 0;
+                    wishlistContainer.innerHTML = "";
+                    preparedDocs.forEach((item) => {
+                        const card = createCard(item.rawDoc); // Pass the original Firestore doc to your card builder
                         wishlistContainer.appendChild(card);
-                        card.addEventListener('click', addFavorites);
+                        card.addEventListener("click", addFavorites);
                         visibleEntriesCount++;
                     });
                 }
