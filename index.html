@@ -33,6 +33,7 @@
 --text-data-highlighted: #9ccfd8;
  }
 
+
             /* 0. Default Theme 02 */
             /* :root {
                 --bg-main: #1a1b26;
@@ -718,6 +719,9 @@
                 border-color: var(--text-title-main);
                 background: var(--bg-card);
             }
+            details p {
+                white-space: break-spaces;
+            }
         </style>
     </head>
     <body>
@@ -898,12 +902,14 @@ const dataMap = {
     defaultOptions: ',Fav.',
   },
 };
+            
+
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
             ////////////////////////////////////////////////////////////////////////////////////////////////
-            
+
             /* const keywordForFavorites = "fav"; */
-            const versionNumber = 4.6;
+            const versionNumber = 4.8;
             const versionFlashTime = 1000; // in ms (1000 ms = 1 sec)
 
             console.log("Collection Name: " + collectionName);
@@ -1216,6 +1222,28 @@ const dataMap = {
                 }
             }
 
+            //  Helper Function to Extract Main Domain Name from A URL for Mouse Hover Text
+            //  Added in v_4.7
+            function extractMainDomain(urlString) {
+                try {
+                    const url = new URL(urlString);
+                    let hostname = url.hostname;
+
+                    // Remove 'www.' prefix if present
+                    hostname = hostname.replace(/^www\./, "");
+
+                    // Split by dots and remove the last part (the TLD)
+                    const parts = hostname.split(".");
+                    if (parts.length > 1) {
+                        parts.pop();
+                    }
+
+                    return parts.join(".");
+                } catch (e) {
+                    return "External Link";
+                }
+            }
+
             /////////////////////////////////////////////////////////////////////
 
             window.onload = function () {
@@ -1499,8 +1527,10 @@ const dataMap = {
                 Object.keys(dataMap).forEach((key) => {
                     const config = dataMap[key];
                     if (config.type === "link" && data[key]) {
+                        // Extract main domain from URL
+                        const mainDomain = extractMainDomain(data[key]);
                         // You can customize SVG/icon as needed per type/link
-                        cardButtons += `<a href="${data[key]}" target="_blank" class="action-button">${mapLinkSvg}</a>`;
+                        cardButtons += `<a href="${data[key]}" target="_blank" class="action-button" title="${mainDomain}">${mapLinkSvg}</a>`;
                     } else if (config.type === "photo" && data[key] && data[key] != "") {
                         if (config.mode === "display") {
                             const img = new Image();
@@ -1552,7 +1582,7 @@ const dataMap = {
                         }
                     }
 
-                    if (key !== "title" && key !== "fav" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText") {
+                    if (key !== "title" && key !== "fav" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText" && data[key] && data[key].trim() !== "-") {
                         // Generate label with fallback value
                         // let value = data[key] || '-';
                         let value = data[key] || "";
@@ -1564,7 +1594,7 @@ const dataMap = {
                             line = `<p class="card-detail"><strong ${labelHiddenFlag}>${config.text}:  &nbsp;</strong><span class="card-values" id="${key}">${value} ${suffix}</span></p>`;
                         }
                         cardDetails += line;
-                    } else if (config.type === "dropText" && data[key]) {
+                    } else if (config.type === "dropText" && data[key] && data[key].trim() !== "-") {
                         cardDetails += `
                         <div class="card-detail">
                             <details>
@@ -1687,16 +1717,15 @@ const dataMap = {
                 if (filteredDocs.length === 0) {
                     noDataMessage.style.display = "block";
                     noDataMessage.textContent = "No matching entries found.";
-                }else if (sortBy !== "timestamp") {
+                } else if (sortBy !== "timestamp") {
                     console.log(`Sorting as per: ${sortBy}`);
-                    noDataMessage.style.display = 'none';
-                    filteredDocs.forEach(doc => {
+                    noDataMessage.style.display = "none";
+                    filteredDocs.forEach((doc) => {
                         const card = createCard(doc);
                         wishlistContainer.appendChild(card);
-                        card.addEventListener('click', addFavorites);
+                        card.addEventListener("click", addFavorites);
                         visibleEntriesCount++;
                     });
-
                 } else {
                     console.log(`Sorting as per: ${sortBy}`);
                     noDataMessage.style.display = "none";
@@ -1764,6 +1793,10 @@ const dataMap = {
                                     // const config = dataMap[key];
                                     if (dataMap[key].type === "photo") {
                                         editingPhotoOGBase64[key] = data[key];
+
+                                        const uID = generateUniqueIDFromText(editingPhotoOGBase64[key]); // For Debugging
+                                        console.log(`Editing phot0 uid: ${uID}`); // For Debugging
+
                                         //console.log(key); // For Debugging
                                         // console.log(editingPhotoOGBase64[key]); // For Debugging
                                         //console.log("photo data");
@@ -1802,6 +1835,23 @@ const dataMap = {
                 }
             });
 
+            // Helper Function for Generating Unique IDs from photo raw data for Debugging purpose
+            // Added in v_4.8
+            function generateUniqueIDFromText(text) {
+                // 1. Validate: Ensure it's a string, not null/undefined, and not just whitespace
+                if (typeof text !== 'string' || !text.trim()) {
+                    return 'Data is Empty';
+                }
+                let hash = 0x811c9dc5; // FNV-1a 32-bit offset basis
+                for (let i = 0; i < text.length; i++) {
+                    hash ^= text.charCodeAt(i);
+                    // 32-bit integer overflow handling
+                    hash = Math.imul(hash, 0x01000193); // FNV-1a 32-bit prime
+                }
+                // Convert to unsigned 32-bit int, then to a base-36 string (0-9, a-z)
+                return (hash >>> 0).toString(36);
+            }
+
             // Handle form submission for Add/Edit
             wishlistForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -1820,6 +1870,16 @@ const dataMap = {
                             data[key] = rawValue;
                         } else if (dataMap[key].type === "photo") {
                             data[key] = editingPhotoOGBase64[key];
+
+                            // let uID = generateUniqueIDFromText(data[key]); // For Debugging
+                            // console.log(`submit: data[key] uID: ${uID}`); // For Debugging
+
+                            // Clearing the Editing Photo data after updating the data[key]
+                            editingPhotoOGBase64[key] = "";
+
+                            // uID = generateUniqueIDFromText(editingPhotoOGBase64[key]); // For Debugging
+                            // console.log(`submit: After Clearing editingPhoto uID: ${uID}`); // For Debugging
+
                             // console.log(data[key]); // For Debugging
                             const input = document.getElementById(key);
 
@@ -1832,11 +1892,21 @@ const dataMap = {
                                 const photoBase64 = await fileToBase64(photoFile, heightLimit);
                                 // console.log("photoBase64: " + photoBase64); // For Debugging
                                 data[key] = photoBase64;
+
+                                let uID = generateUniqueIDFromText(data[key]); // For Debugging
+                                console.log(`submit: input file block data[key] uID: ${uID}`); // For Debugging
+
                                 // console.log("[key]: " + key); // For Debugging
                                 // console.log("data[key]: " + data[key]); // For Debugging
-                                console.log("photoFile is NOT EMPTY");
+                                // console.log("photoFile is NOT EMPTY");
+
+                                // Clearing input File Element from previous photo data 
+                                input.value = '';
+                                // console.log(`input file data: ${input.value}`); // For Debugging
                             } else {
-                                console.log("photoFile is EMPTY");
+                                // console.log("photoFile is EMPTY");
+                                let uID = generateUniqueIDFromText(data[key]);
+                                console.log(`submit: input Else BLock data[key] uID: ${uID}`); // For Debugging
                                 // data[key] = editingPhotoOGBase64[key]; //This code is not needed
                                 if (typeof data[key] === "undefined") {
                                     data[key] = "";
