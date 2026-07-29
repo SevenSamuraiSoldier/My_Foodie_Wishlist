@@ -7,6 +7,21 @@
         <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
 
+        <!-- 4. Read-only Mode Detector (Place here!) -->
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("mode") === "readonly" || params.get("readonly") === "true") {
+                document.documentElement.classList.add("readonly");
+                console.log(
+                    "%c 🔒 READ ONLY MODE ", "background: #6B7280; color: #FFFFFF; font-size: 18px; font-weight: bold; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; " 
+                );
+            } else {
+                console.log(
+                    "%c ✏️ NORMAL MODE ", "background: #2563EB; color: #FFFFFF; font-size: 18px; font-weight: bold; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; " 
+                );
+            }
+        </script>
+
         <style>
             /* Fall Back Theme - OG Default Theme 01 */
             :root {
@@ -32,7 +47,6 @@
 --card-color-finished: #393552;
 --text-data-highlighted: #9ccfd8;
  }
-
 
             /* 0. Default Theme 02 */
             /* :root {
@@ -128,7 +142,7 @@
                     background: color-mix(in srgb, var(--bg-main), rgb(255, 255, 255) 30%);
                 }
             }
-            
+
             /* This ensures hover styles only apply on devices that actually have a mouse */
             @media (orientation: landscape) {
                 .action-button:hover {
@@ -238,7 +252,6 @@
                 min-height: max-content;
                 height: auto;
                 max-width: 85vw;
-
             }
             .card img {
                 border-radius: 0.5rem;
@@ -784,6 +797,18 @@
                 align-items: center;
                 align-content: center;
             }
+
+            
+            /* Read-only overrides */
+            html.readonly .add-button,
+            html.readonly .edit-button,
+            html.readonly .delete-button {
+                display: none !important;
+            }
+
+            html.readonly .fav-button {
+                pointer-events: none !important;
+            }
         </style>
     </head>
     <body>
@@ -824,7 +849,7 @@
                         </svg>
                     </span>
                     <button id="clearInputBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" /></svg>
                     </button>
                 </div>
 
@@ -967,6 +992,28 @@ const dataMap = {
     filter: true,
     clickToCopy: true,
   },
+  link2: { type: 'link', text: 'Link 2' },
+  link3: { type: 'link', text: 'Link 3' },
+  extraDetails: {
+    type: 'dropText',
+    text: 'Details',
+    filter: true,
+    clickToCopy: true,
+    inputFieldType: 'textarea',
+    rows: '3',
+  },
+  extraPhoto1: {
+    type: 'photo',
+    text: 'Extra Photo 1',
+    mode: 'display',
+    height: '300',
+  },
+  extraPhoto2: {
+    type: 'photo',
+    text: 'Extra Photo 2',
+    mode: 'display',
+    height: '300',
+  },
   fav: {
     type: 'datalist',
     text: 'Fav.',
@@ -975,10 +1022,11 @@ const dataMap = {
     defaultOptions: ',Fav.',
   },
 };
+            
             //////////////////////////////////////////////////////////////////////////////////////
 
             /* const keywordForFavorites = "fav"; */
-            const versionNumber = 5.1;
+            const versionNumber = 5.3;
             const versionFlashTime = 1000; // in ms (1000 ms = 1 sec)
 
             console.log("Collection Name: " + collectionName);
@@ -1035,7 +1083,7 @@ const dataMap = {
             const notificationPopup = document.getElementById("notification-popup");
             let editingPhotoOGBase64 = {};
             let debouncingDelay = 400; //in miliseconds
-            const clearInputBtn = document.getElementById('clearInputBtn');
+            const clearInputBtn = document.getElementById("clearInputBtn");
 
             //----Helper Functions---Generalised Code--------------//////////////
 
@@ -1361,7 +1409,7 @@ const dataMap = {
             addBtn.addEventListener("click", () => {
                 modalTitle.textContent = "Add New Entry";
                 // wishlistForm.reset();
-                resetWishlistForm ();
+                resetWishlistForm();
                 docIdInput.value = "";
                 showModal(addEditModal);
             });
@@ -1427,14 +1475,14 @@ const dataMap = {
                 /* // Record start time
                 const t0 = performance.now(); //For Debugging */
 
-                searchBar.value = '';
-                handleSearchUpdate(''); //Added in v_5.1
+                searchBar.value = "";
+                handleSearchUpdate(""); //Added in v_5.1
 
                 /* // Old Code before v_5.1
                 // Create and dispatch the input event
                 const event = new Event('input', { bubbles: true });
                 searchBar.dispatchEvent(event); */
-                
+
                 clearInputBtn.blur();
 
                 /* // Record end time
@@ -1446,9 +1494,9 @@ const dataMap = {
             // Added in v_5.1
             function handleSearchUpdate(value) {
                 if (value !== "") {
-                    clearInputBtn.style.display = 'block';
+                    clearInputBtn.style.display = "block";
                 } else {
-                    clearInputBtn.style.display = 'none';
+                    clearInputBtn.style.display = "none";
                 }
                 debouncedRenderDocs(value);
             }
@@ -1654,8 +1702,10 @@ const dataMap = {
                             const img = new Image();
                             img.src = data[key];
                             if (img.naturalWidth < img.naturalHeight) {
+                                /* cardDetails += `
+                                <img src="${data[key]}" style="height: ${config.height}px;">`; */
                                 cardDetails += `
-                                <img src="${data[key]}" style="height: ${config.height}px;">`;
+                                <img src="${data[key]}" style="width: ${config.height}px;">`;
                             } else {
                                 cardDetails += `
                                 <img src="${data[key]}" style="width: ${config.height}px;">`;
@@ -1694,13 +1744,13 @@ const dataMap = {
                     }
 
                     if (dataMap[key].hasOwnProperty("dataSuffix") && config.dataSuffix.trim() != "") {
-                        if (data[key].trim() != "") {
+                        if (String(data[key]).trim() != "") {
                             suffix = config.dataSuffix.trim();
                             // console.log(`Suffix: ${suffix}`); //For Debugging
                         }
                     }
 
-                    if (key !== "title" && key !== "fav" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText" && data[key] && data[key].trim() !== "-") {
+                    if (key !== "title" && key !== "fav" && config.type !== "link" && config.type !== "photo" && config.type !== "dropText" && data[key] && String(data[key]).trim() !== "-") {
                         // Generate label with fallback value
                         // let value = data[key] || '-';
                         let value = data[key] || "";
@@ -1712,7 +1762,7 @@ const dataMap = {
                             line = `<p class="card-detail"><strong ${labelHiddenFlag}>${config.text}:  &nbsp;</strong><span class="card-values" id="${key}">${value} ${suffix}</span></p>`;
                         }
                         cardDetails += line;
-                    } else if (config.type === "dropText" && data[key] && data[key].trim() !== "-") {
+                    } else if (config.type === "dropText" && data[key] && String(data[key]).trim() !== "-") {
                         cardDetails += `
                         <div class="card-detail">
                             <details>
@@ -1897,7 +1947,7 @@ const dataMap = {
             wishlistContainer.addEventListener("click", (e) => {
                 const editBtn = e.target.closest(".edit-button");
                 const deleteBtn = e.target.closest(".delete-button");
-                
+
                 if (editBtn) {
                     const docId = editBtn.dataset.id;
                     console.log(docId); // For Debugging
@@ -1960,17 +2010,15 @@ const dataMap = {
             function resetWishlistForm() {
                 Object.keys(dataMap).forEach((key) => {
                     const element = wishlistForm.querySelector(`#${key}`);
-                    if (dataMap[key].persistValue === true){
-                        console.log (`persistant value true for key: ${key}`);
-
-                    }else {
+                    if (dataMap[key].persistValue === true) {
+                        console.log(`persistant value true for key: ${key}`);
+                    } else {
                         if (element) {
                             element.value = "";
                         } else {
                             console.warn(`Element with ID '${key}' not found in form`);
                         }
                     }
-                    
                 });
             }
 
@@ -1978,8 +2026,8 @@ const dataMap = {
             // Added in v_4.8
             function generateUniqueIDFromText(text) {
                 // 1. Validate: Ensure it's a string, not null/undefined, and not just whitespace
-                if (typeof text !== 'string' || !text.trim()) {
-                    return 'Data is Empty';
+                if (typeof text !== "string" || !text.trim()) {
+                    return "Data is Empty";
                 }
                 let hash = 0x811c9dc5; // FNV-1a 32-bit offset basis
                 for (let i = 0; i < text.length; i++) {
@@ -2039,8 +2087,8 @@ const dataMap = {
                                 // console.log("data[key]: " + data[key]); // For Debugging
                                 // console.log("photoFile is NOT EMPTY");
 
-                                // Clearing input File Element from previous photo data 
-                                input.value = '';
+                                // Clearing input File Element from previous photo data
+                                input.value = "";
                                 // console.log(`input file data: ${input.value}`); // For Debugging
                             } else {
                                 // console.log("photoFile is EMPTY");
